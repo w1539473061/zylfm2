@@ -144,6 +144,7 @@ python "lf-mir200-knowledge\scripts\lf_kb.py" --root "lf-mir200-knowledge" valid
 ## 一起完善这个知识库
 
 欢迎提交改进，但请先读 [CONTRIBUTING.md](CONTRIBUTING.md)。
+**想用 AI 帮你提交的话，直接用 [AI_GUIDE.md](AI_GUIDE.md) 里那段提示词。**
 
 有一条需要特别注意：`references/mir200-thinking.md` 与 `references/mir200-training.md`
 是 `lf_kb.py update` 从 `样本Mir200` **生成**的。你接入自己的服务端跑过 `update` 之后，

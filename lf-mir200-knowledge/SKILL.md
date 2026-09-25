@@ -132,7 +132,7 @@ python "<skill-dir>\scripts\lf_kb.py" --root "<skill-dir>" validate
 - 脚本内随机取列表项：用 `MOVR` 生成下标，再按下标读 `L$`。样本 `样本Mir200/Envir/Market_def/酒馆/翔天-3.txt` 的写法是 `MOV L$合英雄 [...]`、`MOVR N$抽44 0 5`，然后 `GIVE <$STR(L$合英雄[<$STR(N$抽44)>])> 1`。
 - 不要臆造函数式常量，例如 `<$MAPTITLE(<$STR(A91)>)>`。说明书在 `642-脚本变量大全.md` 中记录 `<$MapTitle>` 为**当前玩家所在地图名**、`<$HMapTitle>` 为英雄所在地图名，并没有收录「地图代码转标题」的参数化函数。脚本随机选目标地图代码又要播报其显示标题时，要从已确认的项目数据推导，例如维护一个与地图代码 `L$` 列表同下标的显示名 `L$` 列表（可由 `MapInfo.txt` 生成）。
 - `GetStringPosEX` 是**条件命令**：放在 `#IF` 下，不要放进 `#ACT`。其路径标志要与路径形式一致（`..\QuestDiary\...` 这类相对路径用 `0`，绝对路径用 `1`）。当它把一行分隔配置返回到 `S$` 变量时，要用收录的 `ExtractStringEx` 拆分该行，不要指望 `GetListString` 填满两个以上输出变量。
-- 金币检查用收录的条件命令 `CHECKGOLD 数量`，例如 `CHECKGOLD 20000`，其后的 `#ELSEACT` 即金币不足路径。不要臆造 `CHECKITEM 金币` 检查，也不要在 `CHECKGOLD` 能表达该守门时偏用裸 `<$GOLDCOUNT>` 比较。
+- 金币检查用收录的条件命令 `CHECKGOLD 数量`，例如 `CHECKGOLD 20000`。说明书在 `knowledge_base/chapters/629-传奇脚本命令详解.md` 把它定义为条件命令（`checkgold 数值 ;拥有金币数>=数值为1否则为0`），所以它要放在 `#IF` 下，其后的 `#ELSEACT` 即金币不足路径。不要臆造 `CHECKITEM 金币` 检查——同章定义 `checkitem 物品 数值 ;测试拥用物品的数量`，测的是物品不是金币；也不要在 `CHECKGOLD` 能表达该守门时偏用裸 `<$GOLDCOUNT>`（`642-脚本变量大全.md` 记录它为当前金币数量常量）比较。（`628-程序变量说明.md` 只讲变量族与 `@@InPutString`/`@@InPutInteger`，**未收录** `CHECKGOLD`，引用时不要指向该章。）
 - `FindMonPoint` 返回指定地图上最近的匹配怪物。定位面板要把每个显示变量初始化为已知兜底值（如 `未知`），只覆盖成功的匹配；后缀变体要写显式 `#OR` 检查，或仅在确实需要时用收录的忽略后缀计数命令。
 
 ### 参数化标签
