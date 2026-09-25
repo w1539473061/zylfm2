@@ -1,0 +1,32 @@
+name: 校验
+
+# 在 PR 与推送到 main 时都跑一遍，让每次改动都有客观检查结果，
+# 审阅者不必只靠肉眼判断。
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 回归测试
+        run: python -m unittest discover -s tests -v
+
+      - name: 生成文件守卫（防止私有样本路径泄漏）
+        run: python scripts/check_generated.py
+
+      - name: 说明书完整性
+        run: python scripts/validate_knowledge_base.py
+
+      - name: 技能自检
+        run: python lf-mir200-knowledge/scripts/lf_kb.py --root lf-mir200-knowledge validate

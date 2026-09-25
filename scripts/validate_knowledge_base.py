@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -74,12 +75,28 @@ def validate(root: Path) -> dict[str, object]:
     }
 
 
+def emit_json(data: object) -> None:
+    """按 UTF-8 直接写 stdout。
+
+    报告里含中文文件名，而 CI（英文 locale 的 Windows runner）的 stdout
+    编码可能不是 UTF-8；直接 print 会抛 UnicodeEncodeError 并以非零码退出，
+    把「校验通过」误报成失败。这里绕开文本层编码，固定写 UTF-8 字节。
+    """
+    text = json.dumps(data, ensure_ascii=False, indent=2)
+    buffer = getattr(sys.stdout, "buffer", None)
+    if buffer is not None:
+        buffer.write((text + "\n").encode("utf-8", errors="replace"))
+        buffer.flush()
+    else:
+        sys.stdout.write(text + "\n")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="静态校验转换后的 Markdown 知识库。")
     parser.add_argument("--root", default="lf-mir200-knowledge/knowledge_base")
     args = parser.parse_args()
     report = validate(Path(args.root))
-    print(json.dumps(report, ensure_ascii=False, indent=2))
+    emit_json(report)
     if report["missing_link_count"] or not report["index_exists"]:
         raise SystemExit(1)
 

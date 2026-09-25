@@ -22,9 +22,11 @@ lf-mir200-knowledge/
 scripts/                      # 仓库级工具
   install_skill.py            # 安装技能到本机技能目录
   validate_knowledge_base.py  # 校验说明书链接与乱码
+  check_generated.py          # 守卫：生成文件不得含私有样本路径或被手工改动
   convert_chm_to_md.py        # 原始 CHM → Markdown 转换（可选，需第三方库）
 
-tests/                        # 回归测试
+tests/                        # 回归测试（28 项）
+.github/                      # CI 与 PR 模板
 ```
 
 ## 快速开始
@@ -126,8 +128,11 @@ python "lf-mir200-knowledge\scripts\lf_kb.py" --root "lf-mir200-knowledge" updat
 ## 开发验证
 
 ```powershell
-# 回归测试（22 项；CHM 转换相关测试在缺第三方库时自动跳过）
+# 回归测试（28 项；CHM 转换相关测试在缺第三方库时自动跳过）
 python -m unittest discover -s tests
+
+# 生成文件守卫：防止私有样本路径被写进 references 下的生成文件
+python scripts\check_generated.py
 
 # 说明书完整性：链接可达性与乱码检查
 python scripts\validate_knowledge_base.py
@@ -135,6 +140,18 @@ python scripts\validate_knowledge_base.py
 # 技能自检
 python "lf-mir200-knowledge\scripts\lf_kb.py" --root "lf-mir200-knowledge" validate
 ```
+
+## 一起完善这个知识库
+
+欢迎提交改进，但请先读 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+有一条需要特别注意：`references/mir200-thinking.md` 与 `references/mir200-training.md`
+是 `lf_kb.py update` 从 `样本Mir200` **生成**的。你接入自己的服务端跑过 `update` 之后，
+自己服务端的脚本路径会被写进这两个被 git 追踪的文件。提交前请断开样本重跑 `update`，
+并运行 `python scripts\check_generated.py` 确认。
+
+流程是标准的 fork → 分支 → PR，**所有改动都由仓库维护者审核后才合并**。
+PR 会自动触发 GitHub Actions 跑上面四项检查，作为审阅的客观依据。
 
 ## 约束
 

@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 
@@ -125,15 +126,25 @@ def install(source: Path, dest: Path, force: bool = False) -> dict[str, object]:
     }
 
 
+def emit(text: str) -> None:
+    """按 UTF-8 直接写 stdout，避免非 UTF-8 locale 下打印中文报编码错。"""
+    buffer = getattr(sys.stdout, "buffer", None)
+    if buffer is not None:
+        buffer.write((text + "\n").encode("utf-8", errors="replace"))
+        buffer.flush()
+    else:
+        sys.stdout.write(text + "\n")
+
+
 def main() -> int:
     args = parse_args()
     dest = args.dest if args.dest is not None else DEFAULT_DESTS[args.target]
     try:
         result = install(args.source, dest, args.force)
     except (InstallError, OSError, json.JSONDecodeError) as exc:
-        print(f"错误：{exc}")
+        emit(f"错误：{exc}")
         return 1
-    print(json.dumps({"ok": True, **result}, ensure_ascii=False, indent=2))
+    emit(json.dumps({"ok": True, **result}, ensure_ascii=False, indent=2))
     return 0
 
 

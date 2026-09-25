@@ -1,0 +1,16 @@
+# 文本文件按原样存储，不做行尾转换。
+#
+# 说明书是从 CHM 转换来的，行尾本来就是混合的（多数 LF、少量 CRLF）。
+# 如果让 git 自动规范化，会造成一次全仓库改动，也会让后续 diff 失真——
+# 审阅 PR 时看不出真实改动，只看到几万行行尾变化。
+# 所以这里显式关闭转换，谁的行尾就是谁的行尾。
+* -text
+
+# 图片与归档按二进制处理
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.rar binary
+*.zip binary
+*.7z binary
