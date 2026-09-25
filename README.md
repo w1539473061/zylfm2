@@ -25,9 +25,17 @@ scripts/                      # 仓库级工具
   check_generated.py          # 守卫：生成文件不得含私有样本路径或被手工改动
   convert_chm_to_md.py        # 原始 CHM → Markdown 转换（可选，需第三方库）
 
-tests/                        # 回归测试（28 项）
+tests/                        # 回归测试（31 项）
 .github/                      # CI 与 PR 模板
 ```
+
+文档入口：
+
+| 文档 | 给谁看 |
+| --- | --- |
+| [USING_WITH_YOUR_SERVER.md](USING_WITH_YOUR_SERVER.md) | **使用者**：把技能接入自己的服务端并学习，含可直接复制的 AI 提示词 |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | **贡献者**：改哪里、怎么验证、怎么提 PR |
+| [AI_GUIDE.md](AI_GUIDE.md) | **贡献者**：让 AI 代你提交改进的提示词 |
 
 ## 快速开始
 
@@ -71,7 +79,7 @@ python scripts\install_skill.py --dest "D:\skills\lf-mir200-knowledge"
 推荐用目录联接，这样服务端更新后索引跟着更新，不必重复拷贝：
 
 ```powershell
-# Windows（管理员或开发者模式）
+# 目录联接不需要管理员权限
 cmd /c mklink /J "lf-mir200-knowledge\样本Mir200" "D:\你的服务端\Mir200"
 ```
 
@@ -90,6 +98,8 @@ python "$KB\scripts\lf_kb.py" --root "$KB" learn-script "样本Mir200/Envir/Ques
 ```
 
 `learn-script` 一次给出标签、调用、标识、输入控件、物品框、定时器、变量与匹配的说明书章节。
+
+完整的接入步骤、以及可以让 AI 直接照着做的提示词，见 [USING_WITH_YOUR_SERVER.md](USING_WITH_YOUR_SERVER.md)。
 
 ## 检索来源
 
@@ -128,7 +138,7 @@ python "lf-mir200-knowledge\scripts\lf_kb.py" --root "lf-mir200-knowledge" updat
 ## 开发验证
 
 ```powershell
-# 回归测试（28 项；CHM 转换相关测试在缺第三方库时自动跳过）
+# 回归测试（31 项；CHM 转换相关测试在缺第三方库时自动跳过）
 python -m unittest discover -s tests
 
 # 生成文件守卫：防止私有样本路径被写进 references 下的生成文件
@@ -137,9 +147,13 @@ python scripts\check_generated.py
 # 说明书完整性：链接可达性与乱码检查
 python scripts\validate_knowledge_base.py
 
-# 技能自检
-python "lf-mir200-knowledge\scripts\lf_kb.py" --root "lf-mir200-knowledge" validate
+# 技能自检（--strict 让索引缺失变成真正的失败，CI 用这个）
+python "lf-mir200-knowledge\scripts\lf_kb.py" --root "lf-mir200-knowledge" validate --strict
 ```
+
+注意 `validate` 不带 `--strict` 时只**报告**状态：索引未建时 `ok` 为 `false`，
+但退出码仍是 `0`（因为先跑一次 `update` 就正常了）。CI 与提交前检查请带 `--strict`，
+否则它永远不会失败。
 
 ## 一起完善这个知识库
 

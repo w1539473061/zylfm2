@@ -236,14 +236,33 @@ def normalize_rel(path: Path) -> str:
 
 
 def find_root(start: Path | None = None, explicit_root: str | None = None) -> ResolvedRoot:
-    candidates: list[tuple[Path, str]] = []
+    """定位知识根。
+
+    显式 --root 是权威：它无效时直接报错，不再静默回落到其它候选。
+    否则 CI 或用户在 A 目录上跑校验、却可能实际校验到 B 目录（例如本机
+    用户级技能目录），命令返回成功但校验的不是目标，属于最危险的一类静默错误。
+    """
     if explicit_root:
-        candidates.append((Path(explicit_root), "--root"))
+        root = Path(explicit_root).resolve()
+        if not (root / "knowledge_base" / "index.md").exists():
+            raise FileNotFoundError(
+                f"--root 指向的目录不是知识根（缺 knowledge_base/index.md）：{root}"
+            )
+        return ResolvedRoot(root=root, source="--root")
+
+    candidates: list[tuple[Path, str]] = []
+    # 环境变量同样按「显式指定」对待：设了就必须有效，否则报错。
     for env_name in ("LF_MIR200_KB_ROOT", "LF_MIR_KB_ROOT"):
         env_root = os.environ.get(env_name)
         if env_root:
-            candidates.append((Path(env_root), env_name))
+            root = Path(env_root).resolve()
+            if not (root / "knowledge_base" / "index.md").exists():
+                raise FileNotFoundError(
+                    f"{env_name} 指向的目录不是知识根（缺 knowledge_base/index.md）：{root}"
+                )
+            return ResolvedRoot(root=root, source=env_name)
 
+    candidates: list[tuple[Path, str]] = []
     current = (start or Path.cwd()).resolve()
     for parent in [current, *current.parents]:
         candidates.append((parent, "ancestor"))
@@ -1064,7 +1083,14 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("update", help="Rebuild docs and sample-script indexes.")
-    sub.add_parser("validate", help="Validate required files and indexes.")
+    validate = sub.add_parser("validate", help="Validate required files and indexes.")
+    # 默认只报告状态（索引未建时 ok=false 属正常，先跑 update 即可）；
+    # --strict 供 CI 用，让「索引缺失」变成真正的失败，而不是永远返回 0。
+    validate.add_argument(
+        "--strict",
+        action="store_true",
+        help="Report failure with a non-zero exit code when the knowledge root is incomplete.",
+    )
 
     search = sub.add_parser("search", help="Search local docs and sample scripts.")
     search.add_argument("query")
@@ -1083,7 +1109,28 @@ def main() -> None:
     if args.command == "update":
         cmd_update(root)
     elif args.command == "validate":
-        print_json(validate_root(root))
+        report = validate_root(root)
+        print_json(report)
+        if args.strict and not report["ok"]:
+            missing = [
+                key
+                for key in (
+                    "knowledge_base_index",
+                    "chapters_dir",
+                    "docs_index",
+                    "sample_index",
+                    "mapinfo_links_index",
+                    "thoughts",
+                    "training_course",
+                )
+                if not report.get(key)
+            ]
+            print_text(
+                "校验未通过，缺失：" + ", ".join(missing) + "\n"
+                "若索引尚未生成，先跑：\n"
+                f'  python "{Path(__file__).resolve()}" --root "{root}" update'
+            )
+            raise SystemExit(1)
     elif args.command == "search":
         cmd_search(root, args.query, args.source, args.limit)
     elif args.command == "inspect":

@@ -28,5 +28,10 @@ jobs:
       - name: 说明书完整性
         run: python scripts/validate_knowledge_base.py
 
+      # 生成的索引不入库，所以 CI 里要先建一次再校验，
+      # 否则 validate 会因索引缺失而失败。
+      - name: 建索引
+        run: python lf-mir200-knowledge/scripts/lf_kb.py --root lf-mir200-knowledge update
+
       - name: 技能自检
-        run: python lf-mir200-knowledge/scripts/lf_kb.py --root lf-mir200-knowledge validate
+        run: python lf-mir200-knowledge/scripts/lf_kb.py --root lf-mir200-knowledge validate --strict

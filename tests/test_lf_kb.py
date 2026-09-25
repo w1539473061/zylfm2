@@ -179,6 +179,55 @@ class LfKnowledgeBaseTests(unittest.TestCase):
         self.assertEqual(report["sample_index_records"], 1)
         self.assertEqual(report["mapinfo_link_records"], 1)
 
+    def test_find_root_honours_explicit_root_and_does_not_fall_back(self):
+        """显式 --root 无效时必须报错，不能静默回落到别的技能目录。
+
+        否则在 A 目录上跑校验却实际校验了 B 目录（例如本机用户级技能目录），
+        命令返回成功但校验的不是目标，属于最危险的静默错误。
+        """
+        from lf_kb import find_root
+
+        with tempfile.TemporaryDirectory() as tmp:
+            # 一个缺 knowledge_base/index.md 的目录
+            broken = Path(tmp) / "broken"
+            broken.mkdir()
+
+            with self.assertRaises(FileNotFoundError) as ctx:
+                find_root(explicit_root=str(broken))
+
+        self.assertIn("不是知识根", str(ctx.exception))
+
+    def test_find_root_accepts_valid_explicit_root(self):
+        from lf_kb import find_root
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "knowledge_base").mkdir(parents=True)
+            (root / "knowledge_base" / "index.md").write_text("# index", encoding="utf-8")
+
+            resolved = find_root(explicit_root=str(root))
+
+        self.assertEqual(resolved.root, root.resolve())
+        self.assertEqual(resolved.source, "--root")
+
+    def test_find_root_rejects_invalid_env_root(self):
+        """环境变量也是显式指定，无效时要报错而不是悄悄换目录。"""
+        import os
+
+        from lf_kb import find_root
+
+        with tempfile.TemporaryDirectory() as tmp:
+            broken = Path(tmp) / "broken"
+            broken.mkdir()
+            os.environ["LF_MIR200_KB_ROOT"] = str(broken)
+            try:
+                with self.assertRaises(FileNotFoundError) as ctx:
+                    find_root()
+            finally:
+                del os.environ["LF_MIR200_KB_ROOT"]
+
+        self.assertIn("LF_MIR200_KB_ROOT", str(ctx.exception))
+
     def test_build_thought_summary_extracts_script_thinking_patterns(self):
         records = [
             {

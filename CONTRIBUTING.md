@@ -49,7 +49,7 @@ python scripts\check_generated.py
 提交前请在仓库根目录跑完整套：
 
 ```powershell
-# 回归测试（28 项；缺 bs4 时 CHM 转换相关项会自动跳过）
+# 回归测试（31 项；缺 bs4 时 CHM 转换相关项会自动跳过）
 python -m unittest discover -s tests
 
 # 生成文件守卫（防止私有样本路径泄漏 / 手工改动生成物）
@@ -58,11 +58,16 @@ python scripts\check_generated.py
 # 说明书完整性：链接可达性与乱码
 python scripts\validate_knowledge_base.py
 
-# 技能自检
-python lf-mir200-knowledge\scripts\lf_kb.py --root lf-mir200-knowledge validate
+# 技能自检（先 update 建索引，再带 --strict 校验）
+python lf-mir200-knowledge\scripts\lf_kb.py --root lf-mir200-knowledge update
+python lf-mir200-knowledge\scripts\lf_kb.py --root lf-mir200-knowledge validate --strict
 ```
 
 四项全过再提 PR。
+
+**顺序很重要**：`check_generated.py` 要排在 `update` **之前**跑。
+`update` 会按当前状态重新生成那两个文件，如果先生成了，被污染的版本就被覆盖成干净版，
+守卫就抓不到了。CI 里也是这个顺序。
 
 ## 改哪里
 
