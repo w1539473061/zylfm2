@@ -1,0 +1,27 @@
+# 样本目录：本地私有服务端脚本，绝不提交
+# 推荐用目录联接接入：cmd /c mklink /J "lf-mir200-knowledge\样本Mir200" "D:\你的服务端\Mir200"
+样本Mir200/
+样本2Mir200/
+
+# 生成的索引：可随时用 update 重建，不必入库
+.lfmir-kb/
+.codex-kb/
+
+# Python
+__pycache__/
+*.pyc
+
+# 原始资料与运行产物
+# chm_extracted/ 是 CHM 解包中间产物，转换脚本会重新生成，不入库
+chm_extracted/
+*.CHM
+*.chm
+*.rar
+*.zip
+*.7z
+*.exe
+*.db
+*.dat
+*.lic
+*.tmp
+*.log
