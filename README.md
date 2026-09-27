@@ -16,7 +16,9 @@ lf-mir200-knowledge/
     assets/                   # 说明书里的配图
     manifest.json
   references/                 # 按主题提炼的规则与深挖记录，按需读取
+    material-assets.md        # 版本锁定、补丁优先级和四类装备素材读取
   scripts/lf_kb.py            # 索引、检索、查看、学习工具（只用 Python 标准库）
+  scripts/material_preview.js  # 可选：通过本机兼容解析器直读 PAK/WIL/WZL
   .lfmir-kb/indexes/          # 生成的索引（可重建，不必提交）
 
 scripts/                      # 仓库级工具
@@ -34,6 +36,7 @@ tests/                        # 回归测试（31 项）
 | 文档 | 给谁看 |
 | --- | --- |
 | [USING_WITH_YOUR_SERVER.md](USING_WITH_YOUR_SERVER.md) | **使用者**：把技能接入自己的服务端并学习，含可直接复制的 AI 提示词 |
+| [lf-mir200-knowledge/references/material-assets.md](lf-mir200-knowledge/references/material-assets.md) | **素材接入**：确认客户端/补丁后读取外观、内观、背包和掉落图 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | **贡献者**：改哪里、怎么验证、怎么提 PR |
 | [AI_GUIDE.md](AI_GUIDE.md) | **贡献者**：让 AI 代你提交改进的提示词 |
 
@@ -74,6 +77,17 @@ python scripts\install_skill.py --dest "D:\skills\lf-mir200-knowledge"
 ## 接入自己的服务端样本（可选但强烈推荐）
 
 本仓库**不包含**任何服务端样本——说明书是通用资料，而样本可能涉及私有服务端文件。
+
+首次接入或更换底板时，先确认四项项目事实：
+
+- 服务端位置：包含 `Envir` 的那一层。
+- 客户端位置：与服务端配套的客户端资源目录。
+- 补丁位置和加载优先级：同名资源由哪一份覆盖。
+- 对应版本的翎风引擎说明书：以用户确认的版本为唯一语法依据。
+
+四项未确认前，不要写脚本、选择素材或沿用其他服务端的编号。素材读取还要区分
+地图人物外观、装备栏内观、背包小图和地面掉落图；详细规则见
+[`references/material-assets.md`](lf-mir200-knowledge/references/material-assets.md)。
 
 想让技能基于**你自己的**服务端脚本作答，把服务端根目录接入为 `样本Mir200` 即可。
 推荐用目录联接，这样服务端更新后索引跟着更新，不必重复拷贝：
@@ -171,7 +185,8 @@ PR 会自动触发 GitHub Actions 跑上面四项检查，作为审阅的客观�
 ## 约束
 
 **只做静态分析与静态验证：不编译、不启动、不运行 Mir200 服务端。**
-不修改服务端二进制、数据库、授权文件与运行日志。
+不修改服务端二进制、授权文件与运行日志。数据库默认只读；用户明确要求入库时，
+按对应版本说明书核对字段，备份后仅改目标记录并回读校验。
 
 ## 许可
 
